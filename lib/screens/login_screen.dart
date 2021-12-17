@@ -1,6 +1,11 @@
 import 'package:flash_chat/constants.dart';
+import 'package:flash_chat/screens/chat_screen.dart';
+import 'package:flash_chat/screens/registration_screen.dart';
 import 'package:flash_chat/widgets/directionalButtons.dart';
 import 'package:flutter/material.dart';
+
+// Firebase Libs
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   static String id = 'login_screen';
@@ -9,6 +14,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  var email;
+  var password;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,6 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               onChanged: (value) {
                 //Do something with the user input.
+                email = value;
+                print("Email $email");
               },
               decoration:
                   kTextInputDecoration.copyWith(hintText: "Enter your email"),
@@ -40,8 +50,11 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 8.0,
             ),
             TextField(
+              obscureText: true,
               onChanged: (value) {
                 //Do something with the user input.
+                password = value;
+                print("Password: $password");
               },
               decoration: kTextInputDecoration.copyWith(
                   hintText: "Enter your password"),
@@ -50,10 +63,25 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 24.0,
             ),
             DirectionalButton(
-              color: Colors.lightBlueAccent,
-              buttonTitle: "Log In",
-              onPress: () {},
-            ),
+                color: Colors.lightBlueAccent,
+                buttonTitle: "Log In",
+                onPress: () async {
+                  // Need to insert the user Login Firebase Code Here
+                  try {
+                    UserCredential _user =
+                        await _auth.signInWithEmailAndPassword(
+                            email: email, password: password);
+                    if (_user != null) {
+                      Navigator.pushNamed(context, ChatScreen.id);
+                    }
+                  } on FirebaseAuthException catch (e) {
+                    if (e.code == 'user-not-found') {
+                      print('No user found for that email.');
+                    }
+                  } catch (e) {
+                    print("Login Exception: $e");
+                  }
+                }),
             // Padding(
             //   padding: EdgeInsets.symmetric(vertical: 16.0),
             //   child: Material(

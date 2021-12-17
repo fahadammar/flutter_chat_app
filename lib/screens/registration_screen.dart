@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/constants.dart';
+import 'package:flash_chat/screens/login_screen.dart';
 import 'package:flash_chat/widgets/directionalButtons.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +11,9 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  var email;
+  var password;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,6 +37,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             TextField(
                 onChanged: (value) {
                   //Do something with the user input.
+                  email = value;
+                  print("Email $email");
                 },
                 decoration: kTextInputDecoration.copyWith(
                     hintText: 'Enter your email')),
@@ -39,8 +46,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               height: 8.0,
             ),
             TextField(
+                obscureText: true,
                 onChanged: (value) {
                   //Do something with the user input.
+                  password = value;
+                  print("Password: $password");
                 },
                 decoration: kTextInputDecoration.copyWith(
                     hintText: "Enter your password")),
@@ -50,7 +60,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             DirectionalButton(
               color: Colors.blueAccent,
               buttonTitle: "Register",
-              onPress: () {},
+              onPress: () async {
+                try {
+                  UserCredential _user =
+                      await _auth.createUserWithEmailAndPassword(
+                          email: email, password: password);
+                  if (_user != null) {
+                    Navigator.pushNamed(context, LoginScreen.id);
+                  }
+                } on FirebaseAuthException catch (e) {
+                  if (e.code == 'email-already-in-use') {
+                    print('The account already exists for that email.');
+                  }
+                } catch (e) {
+                  print("Registration Exception $e");
+                }
+              },
             ),
             // Padding(
             //   padding: EdgeInsets.symmetric(vertical: 16.0),
