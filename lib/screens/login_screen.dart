@@ -3,8 +3,9 @@ import 'package:flash_chat/screens/chat_screen.dart';
 import 'package:flash_chat/screens/registration_screen.dart';
 import 'package:flash_chat/widgets/directionalButtons.dart';
 import 'package:flutter/material.dart';
-
-// Firebase Libs
+// Toast Package
+import 'package:fluttertoast/fluttertoast.dart';
+// Firebase Package
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   var email;
   var password;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,13 +75,31 @@ class _LoginScreenState extends State<LoginScreen> {
                             email: email, password: password);
                     if (_user != null) {
                       Navigator.pushNamed(context, ChatScreen.id);
+                      Fluttertoast.showToast(
+                        msg: "logged In",
+                        gravity: ToastGravity.CENTER,
+                        textColor: Colors.white,
+                        backgroundColor: Colors.black,
+                      );
                     }
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'user-not-found') {
                       print('No user found for that email.');
+                      Fluttertoast.showToast(
+                        msg: "No user found for that email",
+                        gravity: ToastGravity.CENTER,
+                        textColor: Colors.white,
+                        backgroundColor: Colors.black,
+                      );
                     }
                   } catch (e) {
                     print("Login Exception: $e");
+                    Fluttertoast.showToast(
+                      msg: "Login Exception: $e",
+                      gravity: ToastGravity.CENTER,
+                      textColor: Colors.white,
+                      backgroundColor: Colors.black,
+                    );
                   }
                 }),
             // Padding(

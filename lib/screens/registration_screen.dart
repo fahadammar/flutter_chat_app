@@ -1,8 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:flash_chat/screens/login_screen.dart';
 import 'package:flash_chat/widgets/directionalButtons.dart';
 import 'package:flutter/material.dart';
+// Toast Package
+import 'package:fluttertoast/fluttertoast.dart';
+// Firebase Package
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegistrationScreen extends StatefulWidget {
   static String id = 'registration_screen';
@@ -71,9 +74,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 } on FirebaseAuthException catch (e) {
                   if (e.code == 'email-already-in-use') {
                     print('The account already exists for that email.');
+                    Fluttertoast.showToast(
+                      msg: "The account already exists for that email.",
+                      gravity: ToastGravity.CENTER,
+                      textColor: Colors.white,
+                      backgroundColor: Colors.black,
+                    );
                   }
                 } catch (e) {
                   print("Registration Exception $e");
+                  Fluttertoast.showToast(
+                    msg: "Registration Exception $e",
+                    gravity: ToastGravity.CENTER,
+                    textColor: Colors.white,
+                    backgroundColor: Colors.black,
+                  );
                 }
               },
             ),
