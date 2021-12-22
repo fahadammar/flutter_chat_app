@@ -11,6 +11,9 @@ final FirebaseFirestore _firestore =
 var messageCollection = _firestore.collection("messages");
 // Text Editing Controller
 late TextEditingController textController = TextEditingController();
+// Current user Stuff
+final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth
+final currentUser = _auth.currentUser!;
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat_screen';
@@ -19,9 +22,8 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth
-  var logged_in_user;
   late String userMsg;
+  var logged_in_user;
 
   @override
   void initState() {
@@ -94,7 +96,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // This gets the current user and prints it
   void getCurrentUser() {
-    final currentUser = _auth.currentUser!;
     try {
       if (currentUser == null) {
         print("The user is not logged in");
@@ -106,8 +107,9 @@ class _ChatScreenState extends State<ChatScreen> {
           backgroundColor: Colors.black,
         );
       } else if (currentUser != null) {
-        logged_in_user = currentUser.email;
-        print("The current logged In user Email: $logged_in_user");
+        var loggedInUser;
+        loggedInUser = currentUser.email;
+        print("The current logged In user Email: $loggedInUser");
       }
     } catch (e) {
       print("currentUser Exception: $e");
@@ -130,10 +132,13 @@ class MessageStream extends StatelessWidget {
           final userMessage = message.get("text");
           final senderMail = message.get("sender");
 
+          final currentUserMail = currentUser.email;
+
           messageWidgets.add(
             MessageBubble(
               userMessage: userMessage,
               senderMail: senderMail,
+              isMe: currentUserMail == senderMail,
             ),
           );
         }
@@ -152,15 +157,21 @@ class MessageStream extends StatelessWidget {
 class MessageBubble extends StatelessWidget {
   final String userMessage;
   final String senderMail;
-  const MessageBubble({required this.userMessage, required this.senderMail});
+  final bool isMe;
+  const MessageBubble({
+    required this.userMessage,
+    required this.senderMail,
+    required this.isMe,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Column(
-        // we want to align them to left so 👇
-        crossAxisAlignment: CrossAxisAlignment.end,
+        // we want to align msg text & box, to left so 👇
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.start : CrossAxisAlignment.end,
         children: [
           Text(
             senderMail,
@@ -170,16 +181,26 @@ class MessageBubble extends StatelessWidget {
             ),
           ),
           Material(
-            color: Colors.lightBlueAccent,
+            color: isMe ? Colors.white : Colors.lightBlueAccent,
             elevation: 5.0,
-            borderRadius: BorderRadius.circular(30.0),
+            borderRadius: isMe
+                ? const BorderRadius.only(
+                    topRight: Radius.circular(30.0),
+                    bottomRight: Radius.circular(30.0),
+                    bottomLeft: Radius.circular(30.0),
+                  )
+                : const BorderRadius.only(
+                    topLeft: Radius.circular(30.0),
+                    bottomRight: Radius.circular(30.0),
+                    bottomLeft: Radius.circular(30.0),
+                  ),
             child: Padding(
               padding:
                   const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               child: Text(
                 userMessage,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isMe ? Colors.black : Colors.white,
                   fontSize: 15,
                 ),
               ),
