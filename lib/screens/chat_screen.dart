@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flash_chat/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 // Firebase
@@ -12,8 +13,7 @@ var messageCollection = _firestore.collection("messages");
 // Text Editing Controller
 late TextEditingController textController = TextEditingController();
 // Current user Stuff
-final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth
-final currentUser = _auth.currentUser!;
+final _auth = FirebaseAuth.instance; // Firebase Auth
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat_screen';
@@ -41,8 +41,17 @@ class _ChatScreenState extends State<ChatScreen> {
               icon: Icon(Icons.close),
               onPressed: () async {
                 //Implement logout functionality
-                await _auth.signOut();
-                Navigator.pop(context); // pops the user to previous screen
+                //await _auth.signOut();
+                // ignore: await_only_futures
+                // if (await _auth.currentUser == null) {
+                //   // pops the user to previous screen
+                //   Navigator.pushNamedAndRemoveUntil(
+                //     context,
+                //     LoginScreen.id,
+                //     ModalRoute.withName(ChatScreen.id),
+                //   );
+                // }
+                logout();
               }),
         ],
         title: Text('⚡️Chat'),
@@ -75,7 +84,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       // when the send will be tapped the  written text message will be clared
                       textController.clear();
                       messageCollection
-                          .add({"sender": logged_in_user, "text": userMsg})
+                          .add({
+                            "sender": logged_in_user,
+                            "text": userMsg,
+                            "messageTime": DateTime.now(),
+                          })
                           .then((value) => null)
                           .catchError((error) =>
                               print("Exception Firebase FireStore: $error"));
@@ -95,9 +108,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // This gets the current user and prints it
-  void getCurrentUser() {
+  void getCurrentUser() async {
     try {
-      if (currentUser == null) {
+      if (_auth.currentUser == null) {
         print("The user is not logged in");
         print("Current user is null");
         Fluttertoast.showToast(
@@ -106,14 +119,23 @@ class _ChatScreenState extends State<ChatScreen> {
           textColor: Colors.white,
           backgroundColor: Colors.black,
         );
-      } else if (currentUser != null) {
-        var loggedInUser;
-        loggedInUser = currentUser.email;
-        print("The current logged In user Email: $loggedInUser");
+      } else if (_auth.currentUser != null) {
+        // ignore: await_only_futures
+        logged_in_user = await _auth.currentUser!.email;
+        print("The current logged In user Email: $logged_in_user");
       }
     } catch (e) {
       print("currentUser Exception: $e");
     }
+  }
+
+  // LogOut Function
+  Future logout() async {
+    await _auth.signOut().then((value) => Navigator.pushNamedAndRemoveUntil(
+          context,
+          LoginScreen.id,
+          ModalRoute.withName(ChatScreen.id),
+        ));
   }
 }
 
@@ -122,7 +144,13 @@ class MessageStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection("messages").snapshots(),
+      stream: _firestore
+          .collection("messages")
+          .orderBy(
+            'messageTime',
+            descending: true, //setTrue
+          )
+          .snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData) return Container();
         final messages = snapshot.data!.docs;
@@ -132,8 +160,8 @@ class MessageStream extends StatelessWidget {
           final userMessage = message.get("text");
           final senderMail = message.get("sender");
 
-          final currentUserMail = currentUser.email;
-
+          final currentUserMail = _auth.currentUser!.email;
+          print("CurrentUser Mail: $currentUserMail");
           messageWidgets.add(
             MessageBubble(
               userMessage: userMessage,
@@ -145,6 +173,7 @@ class MessageStream extends StatelessWidget {
 
         return Expanded(
           child: ListView(
+            reverse: true,
             children: messageWidgets,
           ),
         );
