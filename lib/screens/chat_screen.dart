@@ -9,6 +9,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 final FirebaseFirestore _firestore =
     FirebaseFirestore.instance; // Firebase Cloud Fire Store
 var messageCollection = _firestore.collection("messages");
+// Text Editing Controller
+late TextEditingController textController = TextEditingController();
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat_screen';
@@ -18,7 +20,6 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth
-  late TextEditingController textController;
   var logged_in_user;
   late String userMsg;
 
@@ -176,7 +177,7 @@ class MessageBubble extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               child: Text(
-                "Message: $userMessage ",
+                userMessage,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
